@@ -32,6 +32,6 @@ ProjectRouter.put(
 ProjectRouter.delete(
   "/:id",
   authMiddleware,
-  roleMiddleware("manager", "admin"),
+  roleMiddleware("admin"),
   deleteProject,
 );

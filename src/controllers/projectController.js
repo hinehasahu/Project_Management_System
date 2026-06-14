@@ -2,12 +2,13 @@ import { ProjectModel } from "../models/projectModel.js";
 
 export const createProject = async (req, res) => {
   try {
-    const { title, description, owner } = req.body;
+    const { title, description } = req.body;
 
     const project = await ProjectModel.create({
       title,
       description,
-      owner,
+      createdBy: req.user._id,
+      updatedBy: req.user._id,
     });
 
     res
@@ -21,7 +22,9 @@ export const createProject = async (req, res) => {
 
 export const getProjects = async (req, res) => {
   try {
-    const projects = await ProjectModel.find();
+    const projects = await ProjectModel.find()
+      .populate("createdBy")
+      .populate("updatedBy");
 
     res
       .status(200)
@@ -53,9 +56,23 @@ export const updateProject = async (req, res) => {
     if (!project)
       return res.status(404).json({ message: "Project not found!" });
 
-    const updatedProject = await ProjectModel.findByIdAndUpdate(req.body, {
-      new: true,
-    });
+    if (
+      req.user.role === "manager" &&
+      project.createdBy.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "You can update only your own projects",
+      });
+    }
+
+    const updatedProject = await ProjectModel.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body, updatedBy: req.user._id },
+      {
+        new: true,
+      },
+    );
     res
       .status(200)
       .json({ success: true, message: "Project updated.", updatedProject });
@@ -67,7 +84,13 @@ export const updateProject = async (req, res) => {
 
 export const deleteProject = async (req, res) => {
   try {
-    const project = await ProjectModel.findByIdAndDelete(req.params.id);
+    const project = await ProjectModel.findById(req.params.id);
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found!",
+      });
+    }
     res
       .status(200)
       .json({ success: true, message: "Project deleted.", project });

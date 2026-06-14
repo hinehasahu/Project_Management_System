@@ -1,4 +1,6 @@
 import { UserModel } from "../models/userModel.js";
+import dotenv from "dotenv";
+dotenv.config();
 import bcrypt from "bcrypt";
 import {
   generateAccessToken,
@@ -17,7 +19,7 @@ export const signup = async (req, res) => {
         message: "User already exists",
       });
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, process.env.SALTROUNDS);
 
     const user = await UserModel.create({
       name,
@@ -28,7 +30,7 @@ export const signup = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "User registered successfully",
-      user
+      user,
     });
   } catch (error) {
     res.status(500).json({
@@ -77,7 +79,7 @@ export const login = async (req, res) => {
       success: true,
       accessToken,
       role: user.role,
-      user
+      user,
     });
   } catch (error) {
     res.status(500).json({
@@ -112,6 +114,114 @@ export const logout = async (req, res) => {
       message: "Logout successful",
     });
   } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await UserModel.find();
+    res
+      .status(200)
+      .json({ success: true, message: "Fetched users list.", user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+    console.log(error.message);
+  }
+};
+
+export const getUserById = async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    res.status(200).json({ success: true, message: "User found.", user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+    console.log(error.message);
+  }
+};
+
+export const updateProfile = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    const user = await UserModel.findById(req.user.id);
+
+    if (!user)
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+
+    if (name) {
+      user.name = name;
+    }
+
+    if (email) {
+      user.email = email;
+    }
+
+    if (password) {
+      user.password = await bcrypt.hash(password, process.env.SALTROUNDS);
+    }
+
+    await user.save();
+
+    res
+      .status(200)
+      .json({ success: true, message: "Profile updated successfully", user });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const updateUserRole = async (req, res) => {
+  try {
+    const { role } = req.body;
+
+    const allowedRoles = ["admin", "manager", "user"];
+
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid role",
+      });
+    }
+
+    const user = await UserModel.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (user._id.toString() === req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You cannot change your own role",
+      });
+    }
+
+    user.role = role;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "User role updated successfully",
+      user,
+    });
+  } catch (error) {
+    console.log(error);
+
     res.status(500).json({
       success: false,
       message: error.message,
