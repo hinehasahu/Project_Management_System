@@ -1,4 +1,6 @@
 import { UserModel } from "../models/userModel.js";
+import jwt from "jsonwebtoken";
+import { generateAccessToken } from "../utils/generateTokens.js";
 
 export const refreshAccessToken = async (req, res) => {
   try {

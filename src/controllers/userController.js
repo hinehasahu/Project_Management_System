@@ -6,6 +6,7 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../utils/generateTokens.js";
+import jwt from "jsonwebtoken"
 
 export const signup = async (req, res) => {
   try {
@@ -126,7 +127,7 @@ export const getAllUsers = async (req, res) => {
     const users = await UserModel.find();
     res
       .status(200)
-      .json({ success: true, message: "Fetched users list.", user });
+      .json({ success: true, message: "Fetched users list.", users });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
     console.log(error.message);
@@ -203,7 +204,7 @@ export const updateUserRole = async (req, res) => {
       });
     }
 
-    if (user._id.toString() === req.user._id.toString()) {
+    if (user._id.toString() === req.user.id.toString()) {
       return res.status(403).json({
         success: false,
         message: "You cannot change your own role",

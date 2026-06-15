@@ -5,9 +5,11 @@ dotenv.config();
 import { UserRouter } from "./src/routes/userRoutes.js";
 import { ProjectRouter } from "./src/routes/projectRoutes.js";
 import { errorHandler } from "./src/middlewares/errorMiddleware.js";
+import cookieParser from "cookie-parser";
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser())
 
 ConnectDB();
 

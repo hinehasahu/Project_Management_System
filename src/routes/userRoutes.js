@@ -10,6 +10,7 @@ import {
 } from "../controllers/userController.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import { roleMiddleware } from "../middlewares/roleMiddleware.js";
+import { refreshAccessToken } from "../controllers/refreshAccessToken.js";
 
 export const UserRouter = express.Router();
 
@@ -18,6 +19,8 @@ UserRouter.post("/register", signup);
 UserRouter.post("/login", login);
 
 UserRouter.post("/logout", logout);
+
+UserRouter.post("/refresh-token", refreshAccessToken)
 
 UserRouter.get(
   "/",
