@@ -19,7 +19,7 @@ export const signup = async (req, res) => {
         message: "User already exists",
       });
     }
-    const hashedPassword = await bcrypt.hash(password, process.env.SALTROUNDS);
+    const hashedPassword = await bcrypt.hash(password,  Number(process.env.SALTROUNDS));
 
     const user = await UserModel.create({
       name,
@@ -165,7 +165,7 @@ export const updateProfile = async (req, res) => {
     }
 
     if (password) {
-      user.password = await bcrypt.hash(password, process.env.SALTROUNDS);
+      user.password = await bcrypt.hash(password, Number(process.env.SALTROUNDS));
     }
 
     await user.save();
